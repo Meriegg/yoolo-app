@@ -1,15 +1,23 @@
 import React from "react";
 import StyledText from "../../components/StyledText";
 import Button from "../../components/Button";
+import useAxios from "../../hooks/useAxios";
 import * as yup from "yup";
+import * as secureStore from "expo-secure-store";
+import { useDispatch } from "react-redux";
+import { setData } from "../../redux/user/userSlice";
 import { View, TouchableOpacity, Text } from "react-native";
 import { StackScreenProps } from "@react-navigation/stack";
 import { mainAppColors } from "../../styles/global";
 import { MaterialInput } from "../../components/Input";
 import { useFormik } from "formik";
 import { ScreenNames } from "../../types";
+import { Alert } from "react-native";
 
 const LoginScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
+  const axios = useAxios({ ignoreRefresh: true });
+  const dispatch = useDispatch();
+
   const initialValues = {
     email: "",
     password: "",
@@ -27,7 +35,24 @@ const LoginScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
       initialValues,
       validationSchema,
       onSubmit: async (values) => {
-        console.log(values);
+        const data: any = await axios.post("/auth/login", values);
+
+        if (data?.status !== 200) {
+          Alert.alert(
+            "An error happened!",
+            data?.data?.message ||
+              data?.errorMessage ||
+              "Could not identify the cause of this error!"
+          );
+        }
+
+        await secureStore.setItemAsync(
+          "refreshToken",
+          data?.data?.refreshToken
+        );
+        await secureStore.setItemAsync("accessToken", data?.data?.accessToken);
+
+        dispatch(setData({ userData: data?.data?.userData || null }));
       },
     });
 
