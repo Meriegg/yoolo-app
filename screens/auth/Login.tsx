@@ -37,12 +37,10 @@ const LoginScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
       onSubmit: async (values) => {
         const data: any = await axios.post("/auth/login", values);
 
-        if (data?.status !== 200) {
+        if (data?.status !== 200 && data?.error) {
           Alert.alert(
             "An error happened!",
-            data?.data?.message ||
-              data?.errorMessage ||
-              "Could not identify the cause of this error!"
+            data?.data?.message || "Could not identify the cause of this error!"
           );
         }
 

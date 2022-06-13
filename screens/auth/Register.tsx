@@ -1,8 +1,12 @@
 import React from "react";
 import StyledText from "../../components/StyledText";
 import Button from "../../components/Button";
+import useAxios from "../../hooks/useAxios";
+import * as secureStore from "expo-secure-store";
 import * as yup from "yup";
-import { View, TouchableOpacity, Text } from "react-native";
+import { useDispatch } from "react-redux";
+import { setData } from "../../redux/user/userSlice";
+import { View, TouchableOpacity, Text, Alert } from "react-native";
 import { StackScreenProps } from "@react-navigation/stack";
 import { mainAppColors } from "../../styles/global";
 import { MaterialInput } from "../../components/Input";
@@ -10,6 +14,9 @@ import { useFormik } from "formik";
 import { ScreenNames } from "../../types";
 
 const RegisterScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
+  const axios = useAxios({ ignoreRefresh: true });
+  const dispatch = useDispatch();
+
   const initialValues = {
     username: "",
     email: "",
@@ -29,7 +36,23 @@ const RegisterScreen: React.FC<StackScreenProps<any>> = ({ navigation }) => {
       initialValues,
       validationSchema,
       onSubmit: async (values) => {
-        console.log(values);
+        const data: any = await axios.post("/auth/register", values);
+
+        if (data?.status !== 200 && data?.error) {
+          Alert.alert(
+            "An error happened!",
+            data?.data?.message ||
+              `We could not identify the cause of this error, Please try again! This is the error Message: \`${data?.errorMessage}\``
+          );
+        }
+
+        await secureStore.setItemAsync(
+          "refreshToken",
+          data?.data?.refreshToken
+        );
+        await secureStore.setItemAsync("accessToken", data?.data?.accessToken);
+
+        dispatch(setData({ userData: data?.data?.userData || null }));
       },
     });
 

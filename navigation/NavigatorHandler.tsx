@@ -7,7 +7,6 @@ import { useDispatch } from "react-redux";
 import { setData } from "../redux/user/userSlice";
 import { NavigationContainer } from "@react-navigation/native";
 import { customDarkTheme } from "../styles/global";
-import { Alert } from "react-native";
 
 const NavigatorHandler = () => {
   const axios = useAxios({ ignoreRefresh: false });
@@ -19,9 +18,8 @@ const NavigatorHandler = () => {
       const apiData: any = await axios.get("/user/getSelfData");
 
       if (apiData?.status !== 200 && apiData?.error) {
-        Alert.alert(
-          "Something went wrong!",
-          "We could not get your data! Please try signing in again."
+        console.error(
+          `COULD NOT GET DATA! status: ${apiData?.status} errorMessage: ${apiData?.errorMessage}`
         );
       }
 
